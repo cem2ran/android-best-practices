@@ -1,11 +1,5 @@
 package com.futurice.project.fragments;
 
-import com.futurice.project.R;
-import com.futurice.project.models.BiographiesModel;
-import com.futurice.project.models.pojo.Author;
-import com.futurice.project.models.pojo.Book;
-import com.futurice.project.utils.SubscriptionUtils;
-
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -13,10 +7,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.util.List;
+import com.futurice.project.R;
+import com.futurice.project.models.BiographiesModel;
+import com.futurice.project.models.pojo.Book;
+import com.futurice.project.utils.SubscriptionUtils;
 
 import rx.Observable;
-import rx.functions.Func1;
 import rx.subscriptions.CompositeSubscription;
 
 public class BookFragment extends Fragment {
@@ -62,18 +58,16 @@ public class BookFragment extends Fragment {
     private Observable<Book> getBiographyBookOf(final String personNameQuery) {
         return biographiesModel.getBiographyBooks(personNameQuery)
             // Get first book in the list
-            .map(new Func1<List<Book>, Book>() { @Override public Book call(List<Book> books) {
+            .map(books -> {
                 if (books == null || books.size() == 0) {
                     return null;
                 }
                 else {
                     return books.get(0);
                 }
-            }})
+            })
             // Ignore null books
-            .filter(new Func1<Book, Boolean>() { @Override public Boolean call(Book book) {
-                return (book != null);
-            }})
+            .filter(book -> (book != null))
             // Make it a hot observable because it will be used by other observables
             .publish().refCount();
     }
@@ -81,31 +75,21 @@ public class BookFragment extends Fragment {
     private Observable<String> getBookName() {
         return bookStream
             // Get book title
-            .map(new Func1<Book, String>() { @Override public String call(Book book) {
-                return book.title;
-            }})
+            .map(book -> book.title)
             .startWith("Loading title...");
     }
 
     private Observable<String> getAuthorName() {
         return bookStream
-            .flatMap(new Func1<Book, Observable<Author>>() { @Override public Observable<Author> call(Book book) {
-                return biographiesModel.getAuthor(book.id);
-            }})
-            .map(new Func1<Author, String>() { @Override public String call(Author author) {
-                return author.name;
-            }})
+            .flatMap(book -> biographiesModel.getAuthor(book.id))
+            .map(author -> author.name)
             .startWith("Loading author name...");
     }
 
     private Observable<String> getBookPrice() {
         return bookStream
-            .flatMap(new Func1<Book, Observable<Integer>>() { @Override public Observable<Integer> call(Book book) {
-                return biographiesModel.getBookPrice(book.id);
-            }})
-            .map(new Func1<Integer, String>() { @Override public String call(Integer integer) {
-                return "Price: " + integer + " EUR";
-            }})
+            .flatMap(book -> biographiesModel.getBookPrice(book.id))
+            .map(integer -> "Price: " + integer + " EUR")
             .startWith("Loading price...");
     }
 

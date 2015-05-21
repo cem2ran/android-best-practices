@@ -30,7 +30,7 @@ public class BiographiesModel {
     }
 
     private Func1<SearchEngineResults, List<Book>> convertSearchResultsToBooks(final int maxAmount) {
-        return new Func1<SearchEngineResults, List<Book>>() { @Override public List<Book> call(SearchEngineResults results) {
+        return results -> {
             if (results == null || results.RelatedTopics == null) {
                 return new ArrayList<Book>();
             }
@@ -43,7 +43,7 @@ public class BiographiesModel {
                 listBooks.add(book);
             }
             return listBooks;
-        }};
+        };
     }
 
     public Observable<Author> getAuthor(String bookId) {
@@ -56,9 +56,7 @@ public class BiographiesModel {
     public Observable<Integer> getBookPrice(String bookId) {
         // This simulates a request to the API for the price
         return Observable.interval(1, TimeUnit.SECONDS)
-            .map(new Func1<Long, Integer>() { @Override public Integer call(Long aLong) {
-                return Math.round(100 + aLong * aLong);
-            }})
+            .map(aLong -> Math.round(100 + aLong * aLong))
             .take(20);
     }
 }
